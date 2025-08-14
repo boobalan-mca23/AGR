@@ -19,7 +19,8 @@ import Receipt from "./components/ReceiptVoucher/receiptvoucher";
 import Customerorders from "./components/Customer/Customerorders";
 import Orderreport from "./components/Report/orderreport";
 import Newjobcard from "./components/Goldsmith/Newjobcard";
-import Goldsmithcard from "./components/Goldsmith/goldsmithcard"
+// import Goldsmithcard from "./components/Goldsmith/goldsmithcard"
+import JobCardDetails from "./components/Goldsmith/JobCard"
 import MasterBullion from "./components/Master/Masterbullion";
 import Bullion from "./components/Bullion/Bullion";
 import Repair from "./components/Repair/Repair";
@@ -51,7 +52,7 @@ function App() {
           path="/goldsmithcard/:id/:name"
           element={
             <PageWithNavbar>
-              <Goldsmithcard />
+              <JobCardDetails/>
             </PageWithNavbar>
           }
         />
