@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
 } from "@mui/material";
 import "./Newjobcard.css";
 import { BACKEND_SERVER_URL } from "../../Config/Config";
+import { MdDeleteForever } from "react-icons/md";
 
 const format = (val) =>
   isNaN(parseFloat(val)) ? "" : parseFloat(val).toFixed(3);
@@ -184,18 +184,18 @@ const NewJobCard = ({
               },
             ]
       );
-    const initialReceivedReturns =
-      initialData?.receivedMetalReturns?.length > 0
-        ? initialData.receivedMetalReturns
-        : initialData?.received?.length > 0
-        ? initialData.received.map((item) => ({
-            id: item.id,
-            weight: item.weight !== undefined ? String(item.weight) : "",
-            touch: item.touch !== undefined ? String(item.touch) : "",
-            purity: calculatePurity(item.weight, item.touch),
-          }))
-        : [{ id: null, weight: "", touch: "", purity: "" }];
-      
+      const initialReceivedReturns =
+        initialData?.receivedMetalReturns?.length > 0
+          ? initialData.receivedMetalReturns
+          : initialData?.received?.length > 0
+          ? initialData.received.map((item) => ({
+              id: item.id,
+              weight: item.weight !== undefined ? String(item.weight) : "",
+              touch: item.touch !== undefined ? String(item.touch) : "",
+              purity: calculatePurity(item.weight, item.touch),
+            }))
+          : [{ id: null, weight: "", touch: "", purity: "" }];
+
       setReceivedMetalReturns(initialReceivedReturns);
 
       if (initialData.totalRecord) {
@@ -324,7 +324,6 @@ const NewJobCard = ({
           totalBalance: totalGivenToGoldsmith,
         };
 
-
         const jobcardResponse = await fetch(
           `${BACKEND_SERVER_URL}/api/assignments/create`,
           {
@@ -419,7 +418,7 @@ const NewJobCard = ({
           goldsmithId: artisanId,
           jobcardId: jobcardId,
           date: item.date || new Date().toISOString(),
-          description: item.description || ''
+          description: item.description || "",
         }));
 
       const receivedSectionExists =
@@ -479,6 +478,10 @@ const NewJobCard = ({
     }
   };
 
+  const handleRemoveGoldRow=()=>{
+    console.log('gold index',)
+  }
+
   return (
     <Dialog
       open={true}
@@ -534,7 +537,6 @@ const NewJobCard = ({
               rows="3"
               className="textarea"
               placeholder="Enter job Description...."
-              disabled={isLoading || isEditing}
             />
           </div>
 
@@ -550,7 +552,6 @@ const NewJobCard = ({
                     handleGoldRowChange(i, "weight", e.target.value)
                   }
                   className="input"
-                  disabled={isLoading || isEditing}
                   onWheel={(e) => e.target.blur()}
                 />
                 <span className="operator">x</span>
@@ -563,7 +564,6 @@ const NewJobCard = ({
                   }
                   onWheel={(e) => e.target.blur()}
                   className="input"
-                  disabled={isLoading || isEditing}
                 />
                 <span className="operator">=</span>
                 <input
@@ -573,6 +573,7 @@ const NewJobCard = ({
                   value={format(row.purity)}
                   className="input-read-only"
                 />
+                <MdDeleteForever size={25} onClick={(i)=>handleRemoveGoldRow(i)} />
               </div>
             ))}
             <button
@@ -583,7 +584,6 @@ const NewJobCard = ({
                 ])
               }
               className="circle-button"
-              disabled={isLoading || isEditing}
             >
               +
             </button>

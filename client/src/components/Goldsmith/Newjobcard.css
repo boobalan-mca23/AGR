@@ -74,6 +74,8 @@
     align-items: center;
     gap: 15px;
     margin-bottom: 15px;
+    margin-right: 10px;
+    margin-left:10px ;
   }
   
   .input {

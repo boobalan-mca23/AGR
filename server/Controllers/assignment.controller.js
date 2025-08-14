@@ -13,7 +13,7 @@ const createJobcard = async (req, res) => {
       totalPurity,
       totalBalance,
     } = req.body;
-
+    console.log('reqBody',req.body)
     if (
       !goldsmithId ||
       weight == null ||
