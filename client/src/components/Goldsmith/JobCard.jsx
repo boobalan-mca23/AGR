@@ -27,13 +27,27 @@ import AgrNewJobCard from "./AgrNewJobCard";
 function JobCardDetails() {
   const { id, name } = useParams();
   const [description, setDescription] = useState("");
-  const [givenGold,setGivenGold]=useState([{weight:"",touch:"",purity:""}])
-  const [itemDelivery,setItemDelivery]=useState([
-    {ItemName:"",ItemWeight:"",Touch:"",
-     stone:[{dedcution:"",weight:""}],netwt:"",wastageTyp:"",wastageValue:"",finalPurity:""}])
+  const [givenGold, setGivenGold] = useState([
+    { weight: "", touch: "", purity: "" },
+  ]);
+
+  const [itemDelivery, setItemDelivery] = useState([
+    {
+      ItemName: "",
+      ItemWeight: "",
+      Touch: "",
+      stone: [{type: "", weight: "" }],
+      netwt: "",
+      wastageType: "",
+      wastageValue: "",
+      finalPurity: "",
+    },
+  ]);
+
+
   const [openJobcardDialog, setOpenJobcardDialog] = useState(false);
   const [edit, setEdit] = useState(false);
- 
+
   const handleCreateJobcard = () => {
     setOpenJobcardDialog(true);
   };
@@ -276,7 +290,6 @@ function JobCardDetails() {
         onClose={handleCloseJobcard}
         fullWidth
         maxWidth="md"
-        
       >
         <AgrNewJobCard
           description={description}
@@ -285,6 +298,7 @@ function JobCardDetails() {
           setGivenGold={setGivenGold}
           itemDelivery={itemDelivery}
           setItemDelivery={setItemDelivery}
+          
           name={name}
           edit={edit}
           handleCloseJobcard={handleCloseJobcard}

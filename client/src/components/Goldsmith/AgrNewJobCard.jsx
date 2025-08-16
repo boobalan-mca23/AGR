@@ -26,7 +26,6 @@ import { useState, useEffect } from "react";
 import "./AgrNewJobCard.css";
 import React from "react";
 function AgrNewJobCard({
-
   edit,
   handleCloseJobcard,
   name,
@@ -39,6 +38,8 @@ function AgrNewJobCard({
 }) {
   const today = new Date().toLocaleDateString("en-IN");
   const [time, setTime] = useState(null);
+  const stoneOptions = ["Stone", "Enamel", "Beads", "Others"];
+  const symbolOptions = ["Touch", "%", "+"];
 
   const format = (
     val // its used for set three digit after point value
@@ -70,6 +71,42 @@ function AgrNewJobCard({
     (sum, row) => sum + parseFloat(row.purity || 0),
     0
   );
+
+  const handleChangeDeliver = (val, field, i) => {
+    const copy = [...itemDelivery];
+    copy[i][field] = val;
+
+    setItemDelivery(copy);
+  };
+  const handleDeductionChange = (itemIndex, deductionIndex, field, val) => {
+    console.log("dedIndex", deductionIndex);
+    const updated = [...itemDelivery];
+    updated[itemIndex].stone[deductionIndex][field] = val;
+    setItemDelivery(updated);
+  };
+
+  const handleRemovedelivery = (i) => {
+    const isTrue = window.confirm("Are You Want To Remove This Row");
+    if (isTrue) {
+      const filterItem = itemDelivery.filter((_, index) => i !== index);
+      setItemDelivery(filterItem);
+    }
+  };
+  const handleRemoveDeduction = (itemIndex, stoneIndex) => {
+    const isTrue = window.confirm("Are you sure you want to remove this row?");
+    if (!isTrue) return;
+
+    setItemDelivery((prev) =>
+      prev.map((item, idx) => {
+        if (idx !== itemIndex) return item; // leave other items untouched
+        return {
+          ...item,
+          stone: item.stone.filter((_, sIdx) => sIdx !== stoneIndex), // remove specific stone
+        };
+      })
+    );
+  };
+
   const handleRemoveGoldRow = (i) => {
     const isTrue = window.confirm("Are You Want To Remove This Row");
     if (isTrue) {
@@ -195,75 +232,260 @@ function AgrNewJobCard({
         </Box>
         <Box className="section">
           <h4 className="section-title">Item Delivery</h4>
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }} aria-label="item table">
-              <TableHead>
+          <TableContainer component={Paper} className="jobCardContainer">
+            <Table size="small" sx={{ "& td, & th": { padding: "4px 8px", fontSize: "0.8rem" } }} aria-label="item table">
+              <TableHead className="jobcardhead">
                 <TableRow>
-                  <TableCell>S.No</TableCell>
-                  <TableCell>Item Name</TableCell>
-                  <TableCell>Item Weight</TableCell>
-                  <TableCell>Touch</TableCell>
+                  <TableCell rowSpan={2}>S.No</TableCell>
+                  <TableCell rowSpan={2}>Item Name</TableCell>
+                  <TableCell rowSpan={2}>Item Weight</TableCell>
+                  <TableCell rowSpan={2}>Touch</TableCell>
+                  <TableCell rowSpan={2}>Action</TableCell>
+                  <TableCell colSpan={3}>Deduction</TableCell>
+                  <TableCell rowSpan={2}>Net Weight</TableCell>
+                  <TableCell rowSpan={2}>Wastage Type</TableCell>
+                  <TableCell rowSpan={2}>Wastage Value</TableCell>
+                  <TableCell rowSpan={2}>Final Purity</TableCell>
+                  <TableCell rowSpan={2}>Action</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>stone</TableCell>
+                  <TableCell>weight</TableCell>
                   <TableCell>Action</TableCell>
-                  <TableCell colSpan={2}>Deduction</TableCell>
-                  <TableCell>Net Weight</TableCell>
-                  <TableCell>Wastage Type</TableCell>
-                  <TableCell>Wastage Value</TableCell>
-                  <TableCell>Final Purity</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {itemDelivery.map((item, index) => (
                   <React.Fragment key={index}>
                     <TableRow>
-                      <TableCell rowSpan={item.stone.length}>
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
                         {index + 1}
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length}>
-                        <input  className="input" type="number"  onWheel={(e) => e.target.blur()} />
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                        <input
+                          value={item.ItemName}
+                          className="input"
+                          type="number"
+                          onChange={(e) =>
+                            handleChangeDeliver(
+                              e.target.value,
+                              "ItemName",
+                              index
+                            )
+                          }
+                          onWheel={(e) => e.target.blur()}
+                        />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length}>
-                        <input   className="input"  type="number"  onWheel={(e) => e.target.blur()}/>
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                        <input
+                          value={item.ItemWeight}
+                          className="input"
+                          type="number"
+                          onChange={(e) =>
+                            handleChangeDeliver(
+                              e.target.value,
+                              "ItemWeight",
+                              index
+                            )
+                          }
+                          onWheel={(e) => e.target.blur()}
+                        />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length}>
-                        <input  className="input"  type="number"  onWheel={(e) => e.target.blur()}/>
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                        <input
+                          value={item.Touch}
+                          className="input"
+                          type="number"
+                          onChange={(e) =>
+                            handleChangeDeliver(e.target.value, "Touch", index)
+                          }
+                          onWheel={(e) => e.target.blur()}
+                        />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length}>
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
                         <Button onClick={() => handleStone(index)}>+</Button>
                       </TableCell>
 
                       {/* First stone row */}
-                      <TableCell>
-                        <input  className="input"v type="number"  onWheel={(e) => e.target.blur()}/>
-                      </TableCell>
-                      <TableCell>
-                        <input  className="input"  type="number"  onWheel={(e) => e.target.blur()}/>
-                      </TableCell>
+                      {item.stone.length >= 1 ? (
+                        <>
+                          <TableCell className="tableCell">
+                            <select
+                              value={
+                                item.stone.length >= 1 ? item.stone[0].type : ""
+                              }
+                              onChange={(e) =>
+                                handleDeductionChange(
+                                  index,
+                                  0,
+                                  "type",
+                                  e.target.value
+                                )
+                              }
+                              className="select-small"
+                              // disabled={isLoading || !isItemDeliveryEnabled}
+                            >
+                              {stoneOptions.map((option) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          </TableCell>
+                          <TableCell className="tableCell">
+                            <input
+                              value={
+                                item.stone.length >= 1
+                                  ? item.stone[0].weight
+                                  : ""
+                              }
+                              className="input"
+                              type="number"
+                              onChange={(e) =>
+                                handleDeductionChange(
+                                  index,
+                                  0,
+                                  "weight",
+                                  e.target.value
+                                )
+                              }
+                              onWheel={(e) => e.target.blur()}
+                            />
+                          </TableCell>
+                          <TableCell className="tableCell">
+                            <MdDeleteForever
+                              className="delIcon"
+                              size={25}
+                              onClick={() => handleRemoveDeduction(index, 0)}
+                            />
+                          </TableCell>
+                        </>
+                      ) : (
+                        <TableCell colSpan={3}>No stone</TableCell>
+                      )}
 
-                      <TableCell rowSpan={item.stone.length}>
-                        <input  className="input"  type="number"  onWheel={(e) => e.target.blur()} />
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                        <input
+                          value={item.netwt}
+                          className="input"
+                          type="number"
+                          onChange={(e) =>
+                            handleChangeDeliver(e.target.value, "netwt", index)
+                          }
+                          onWheel={(e) => e.target.blur()}
+                        />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length}>
-                        <input  className="input"   type="number"  onWheel={(e) => e.target.blur()}/>
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                        <select
+                          value={item.wastageType}
+                          onChange={(e) =>
+                            handleChangeDeliver(
+                              e.target.value,
+                              "wastageType",
+                              index
+                            )
+                          }
+                          className="select-small"
+                          // disabled={isLoading || !isItemDeliveryEnabled}
+                        >
+                          {symbolOptions.map((symbol) => (
+                            <option key={symbol} value={symbol}>
+                              {symbol}
+                            </option>
+                          ))}
+                        </select>
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length}>
-                        <input  className="input"  type="number"  onWheel={(e) => e.target.blur()}/>
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                        <input
+                          value={item.wastageValue}
+                          className="input"
+                          type="number"
+                          onChange={(e) =>
+                            handleChangeDeliver(
+                              e.target.value,
+                              "wastageValue",
+                              index
+                            )
+                          }
+                          onWheel={(e) => e.target.blur()}
+                        />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length}>
-                        <input  className="input"  type="number"  onWheel={(e) => e.target.blur()}/>
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                        <input
+                          value={item.finalPurity}
+                          className="input"
+                          type="number"
+                          onChange={(e) =>
+                            handleChangeDeliver(
+                              e.target.value,
+                              "finalPurity",
+                              index
+                            )
+                          }
+                          onWheel={(e) => e.target.blur()}
+                        />
+                      </TableCell>
+                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                        <MdDeleteForever
+                          className="delIcon"
+                          size={25}
+                          onClick={() => handleRemovedelivery(index)}
+                        />
                       </TableCell>
                     </TableRow>
 
                     {/* Remaining stone rows */}
-                    {item.stone.slice(1).map((s, i) => (
-                      <TableRow key={i}>
-                        <TableCell>
-                          <input  className="input"  type="number"  onWheel={(e) => e.target.blur()}/>
-                        </TableCell>
-                        <TableCell>
-                          <input   className="input"  type="number"  onWheel={(e) => e.target.blur()}/>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {item.stone.map(
+                      (s, i) =>
+                        i !== 0 && (
+                          <TableRow key={i} className="tableCell">
+                            <TableCell>
+                              <select
+                                value={s.type}
+                                onChange={(e) =>
+                                  handleDeductionChange(
+                                    index,
+                                    i,
+                                    "type",
+                                    e.target.value
+                                  )
+                                }
+                                className="select-small"
+                                // disabled={isLoading || !isItemDeliveryEnabled}
+                              >
+                                {stoneOptions.map((option) => (
+                                  <option key={option} value={option}>
+                                    {option}
+                                  </option>
+                                ))}
+                              </select>
+                            </TableCell>
+                            <TableCell className="tableCell">
+                              <input
+                                value={s.weight}
+                                className="input"
+                                type="number"
+                                onChange={(e) =>
+                                  handleDeductionChange(
+                                    index,
+                                    i,
+                                    "weight",
+                                    e.target.value
+                                  )
+                                }
+                                onWheel={(e) => e.target.blur()}
+                              />
+                            </TableCell>
+                            <TableCell className="tableCell">
+                              <MdDeleteForever
+                                className="delIcon"
+                                size={25}
+                                onClick={() => handleRemoveDeduction(index, i)}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        )
+                    )}
                   </React.Fragment>
                 ))}
               </TableBody>
