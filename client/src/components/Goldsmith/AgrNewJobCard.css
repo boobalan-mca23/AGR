@@ -3,6 +3,9 @@
   min-width: 970px; /* your desired width */
 }
 
+.tableCell{
+  border-bottom: 1px solid black !important;
+}
 
 .section {
     padding:12px;
@@ -66,7 +69,7 @@
     border-radius: 6px;
     border: 1px solid #ccc;
     box-sizing: border-box;
-    width: 120px;
+    width: 110px;
     transition: border-color 0.3s ease;
   }
   
@@ -91,7 +94,7 @@
     color: #666;
     cursor: not-allowed;
     box-sizing: border-box;
-    width: 120px;
+    width: 110px;
   }
   
   .circle-button {
@@ -130,6 +133,34 @@
   align-items: center;
 }
 
+.jobCardContainer{
+  position: relative;
+  overflow: auto;
+  max-height: 300px;
+}
+.jobcardhead{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.select-small {
+    width: 100px;
+    padding: 10px 8px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+    text-align-last: center;
+    transition: border-color 0.3s ease;
+  }
+  
+  .select-small:focus {
+    border-color: #3498db;
+    outline: none;
+  }
+  
 
 
 
