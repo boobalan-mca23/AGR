@@ -19,95 +19,81 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import { styled } from '@mui/material/styles';
-
-
 import { useParams, useLocation } from "react-router-dom";
 import { Add, Visibility } from "@mui/icons-material";
 import { useState } from "react";
 import AgrNewJobCard from "./AgrNewJobCard";
 
-function JobCardDetails(){
-    const BootstrapDialog = styled(Dialog)(({ theme }) => ({
-  '& .MuiDialogContent-root': {
-    padding: theme.spacing(2),
-  },
-  '& .MuiDialogActions-root': {
-    padding: theme.spacing(1),
-  },
-}));
-      const { id, name } = useParams();
-      const [openJobcardDialog,setOpenJobcardDialog]=useState(false)
-      const [edit,setEdit]=useState(false)
-      console.log('id and name',id,name)
-      const handleCreateJobcard=()=>{
+function JobCardDetails() {
+  const { id, name } = useParams();
+  const [description, setDescription] = useState("");
+  const [givenGold,setGivenGold]=useState([{weight:"",touch:"",purity:""}])
+  const [itemDelivery,setItemDelivery]=useState([
+    {ItemName:"",ItemWeight:"",Touch:"",
+     stone:[{dedcution:"",weight:""}],netwt:"",wastageTyp:"",wastageValue:"",finalPurity:""}])
+  const [openJobcardDialog, setOpenJobcardDialog] = useState(false);
+  const [edit, setEdit] = useState(false);
+ 
+  const handleCreateJobcard = () => {
+    setOpenJobcardDialog(true);
+  };
+  const handleCloseJobcard = () => {
+    setOpenJobcardDialog(false);
+  };
 
-        setOpenJobcardDialog(true)
-
-      }
-      const handleCloseJobcard=()=>{
-        setOpenJobcardDialog(false)
-      }
-
-      
-    return(
-          <>
-            <Container maxWidth="xxl" sx={{ py: 3 }}>
-      {/* {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          Error: {error}
-        </Alert>
-      )} */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Typography
-          variant="h5"
-          gutterBottom
-          sx={{ fontWeight: "bold", textAlign: "center" }}
-        >
-          Goldsmith Details
-        </Typography>
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 2,
-            mb: 3,
-          }}
-        >
-          <div>
-            <Box sx={{ pl: 2 }}>
-              <Typography>
-                <b>Name:</b> {name}
-              </Typography>
-            </Box>
-          </div>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-            Job Card Records
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Add />}
-            onClick={handleCreateJobcard}
+  return (
+    <>
+      <Container maxWidth="xxl" sx={{ py: 3 }}>
+        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+          <Typography
+            variant="h5"
+            gutterBottom
+            sx={{ fontWeight: "bold", textAlign: "center" }}
           >
-            New Job Card
-          </Button>
-        </Box>
+            Goldsmith Details
+          </Typography>
 
-        {/* {loadingJobcards ? (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 2,
+              mb: 3,
+            }}
+          >
+            <div>
+              <Box sx={{ pl: 2 }}>
+                <Typography>
+                  <b>Name:</b> {name}
+                </Typography>
+              </Box>
+            </div>
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3,
+            }}
+          >
+            <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+              Job Card Records
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Add />}
+              onClick={handleCreateJobcard}
+            >
+              New Job Card
+            </Button>
+          </Box>
+
+          {/* {loadingJobcards ? (
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
             <CircularProgress />
           </Box>
@@ -283,21 +269,28 @@ function JobCardDetails(){
             </Table>
           </Paper>
         )} */}
-      </Paper>
-
-      <BootstrapDialog
-        onClose={handleCloseJobcard}
-        aria-labelledby="customized-dialog-title"
+        </Paper>
+      </Container>
+      <Dialog
         open={openJobcardDialog}
+        onClose={handleCloseJobcard}
+        fullWidth
+        maxWidth="md"
+        
       >
         <AgrNewJobCard
-         name={name}
-         edit={edit}
-         handleCloseJobcard={handleCloseJobcard}
+          description={description}
+          setDescription={setDescription}
+          givenGold={givenGold}
+          setGivenGold={setGivenGold}
+          itemDelivery={itemDelivery}
+          setItemDelivery={setItemDelivery}
+          name={name}
+          edit={edit}
+          handleCloseJobcard={handleCloseJobcard}
         />
-      </BootstrapDialog>
-    </Container>
-          </>
-    )
+      </Dialog>
+    </>
+  );
 }
-export default JobCardDetails
+export default JobCardDetails;
