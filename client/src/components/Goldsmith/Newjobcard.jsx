@@ -478,8 +478,8 @@ const NewJobCard = ({
     }
   };
 
-  const handleRemoveGoldRow=()=>{
-    console.log('gold index',)
+  const handleRemoveGoldRow=(i)=>{
+    console.log('gold index',i)
   }
 
   return (
@@ -573,7 +573,7 @@ const NewJobCard = ({
                   value={format(row.purity)}
                   className="input-read-only"
                 />
-                <MdDeleteForever size={25} onClick={(i)=>handleRemoveGoldRow(i)} />
+                <MdDeleteForever size={25} onClick={()=>handleRemoveGoldRow(i)} />
               </div>
             ))}
             <button
