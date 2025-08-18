@@ -35,12 +35,15 @@ function AgrNewJobCard({
   setGivenGold,
   itemDelivery,
   setItemDelivery,
+  receivedMetalReturns,
+  setReceivedMetalReturns
 }) {
   const today = new Date().toLocaleDateString("en-IN");
   const [time, setTime] = useState(null);
   const stoneOptions = ["Stone", "Enamel", "Beads", "Others"];
   const symbolOptions = ["Touch", "%", "+"];
-
+  const [openingBalance, setOpeningBalance] = useState(0.0);
+ 
   const format = (
     val // its used for set three digit after point value
   ) => (isNaN(parseFloat(val)) ? "" : parseFloat(val).toFixed(3));
@@ -78,6 +81,16 @@ function AgrNewJobCard({
 
     setItemDelivery(copy);
   };
+    const handleReceivedRowChange = (i, field, val) => {
+    const copy = [...receivedMetalReturns];
+    copy[i][field] = val;
+    copy[i].purity = calculatePurity(
+      parseFloat(copy[i].weight),
+      parseFloat(copy[i].touch)
+    );
+    setReceivedMetalReturns(copy);
+  };
+
   const handleDeductionChange = (itemIndex, deductionIndex, field, val) => {
     console.log("dedIndex", deductionIndex);
     const updated = [...itemDelivery];
@@ -131,6 +144,16 @@ function AgrNewJobCard({
     const timer = setInterval(updateTime, 60000);
     return () => clearInterval(timer);
   }, []);
+   const totalGivenToGoldsmith = openingBalance + totalInputPurityGiven;
+    const totalFinishedPurity = itemDelivery.reduce(
+    (sum, item) => sum + parseFloat(item.finalPurity || 0),
+    0
+  );
+   const totalReceivedPurity = receivedMetalReturns.reduce(
+    (sum, row) => sum + parseFloat(row.purity || 0),
+    0
+  );
+
   return (
     <>
       <DialogTitle className="dialogTitle" id="customized-dialog-title">
@@ -169,6 +192,7 @@ function AgrNewJobCard({
             className="textarea"
           />
         </div>
+        {/* Given Gold */}
         <Box className="section">
           <h4 className="section-title">Given Details</h4>
           <div className="givenGold">
@@ -230,6 +254,30 @@ function AgrNewJobCard({
             </span>
           </div>
         </Box>
+        {/* Balance */}
+         <Box className="section">
+            <h3 className="section-title">Balance</h3>
+            <div className="balance-block">
+              <div className="balance-display-row">
+                <span className="balance-label">Opening Balance:</span>
+                <span className="balance-value">{format(openingBalance)}</span>
+              </div>
+              <div className="balance-display-row">
+                <span className="balance-label">Total Purity:</span>
+                <span className="balance-value">
+                  {format(totalInputPurityGiven)}
+                </span>
+              </div>
+              <div>----------</div>
+              <div className="balance-display-row">
+                <span className="balance-label">Total Balance:</span>
+                <span className="balance-value">
+                  {format(totalGivenToGoldsmith)}
+                </span>
+              </div>
+            </div>
+          </Box>
+          {/* Item Delivery Section */}
         <Box className="section">
           <h4 className="section-title">Item Delivery</h4>
           <TableContainer component={Paper} className="jobCardContainer">
@@ -258,14 +306,14 @@ function AgrNewJobCard({
                 {itemDelivery.map((item, index) => (
                   <React.Fragment key={index}>
                     <TableRow>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         {index + 1}
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <input
                           value={item.ItemName}
                           className="input"
-                          type="number"
+                          type="text"
                           onChange={(e) =>
                             handleChangeDeliver(
                               e.target.value,
@@ -276,7 +324,7 @@ function AgrNewJobCard({
                           onWheel={(e) => e.target.blur()}
                         />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <input
                           value={item.ItemWeight}
                           className="input"
@@ -291,7 +339,7 @@ function AgrNewJobCard({
                           onWheel={(e) => e.target.blur()}
                         />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <input
                           value={item.Touch}
                           className="input"
@@ -302,7 +350,7 @@ function AgrNewJobCard({
                           onWheel={(e) => e.target.blur()}
                         />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <Button onClick={() => handleStone(index)}>+</Button>
                       </TableCell>
 
@@ -361,10 +409,10 @@ function AgrNewJobCard({
                           </TableCell>
                         </>
                       ) : (
-                        <TableCell colSpan={3}>No stone</TableCell>
+                        <TableCell colSpan={3} rowSpan={1}>No stone</TableCell>
                       )}
 
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <input
                           value={item.netwt}
                           className="input"
@@ -375,7 +423,7 @@ function AgrNewJobCard({
                           onWheel={(e) => e.target.blur()}
                         />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <select
                           value={item.wastageType}
                           onChange={(e) =>
@@ -395,7 +443,7 @@ function AgrNewJobCard({
                           ))}
                         </select>
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <input
                           value={item.wastageValue}
                           className="input"
@@ -410,7 +458,7 @@ function AgrNewJobCard({
                           onWheel={(e) => e.target.blur()}
                         />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <input
                           value={item.finalPurity}
                           className="input"
@@ -425,7 +473,7 @@ function AgrNewJobCard({
                           onWheel={(e) => e.target.blur()}
                         />
                       </TableCell>
-                      <TableCell rowSpan={item.stone.length} className="tableCell">
+                      <TableCell rowSpan={item.stone.length||1} className="tableCell">
                         <MdDeleteForever
                           className="delIcon"
                           size={25}
@@ -435,11 +483,12 @@ function AgrNewJobCard({
                     </TableRow>
 
                     {/* Remaining stone rows */}
-                    {item.stone.map(
+                    {
+                    item.stone.map(
                       (s, i) =>
                         i !== 0 && (
-                          <TableRow key={i} className="tableCell">
-                            <TableCell>
+                          <TableRow key={i} >
+                            <TableCell className="tableCell">
                               <select
                                 value={s.type}
                                 onChange={(e) =>
@@ -491,6 +540,14 @@ function AgrNewJobCard({
               </TableBody>
             </Table>
           </TableContainer>
+             <div className="totals-section">
+              <div className="total-row">
+                <span className="total-purity-label">Total Item Purity:</span>
+                <span className="total-purity-value">
+                  {format(totalFinishedPurity)}
+                </span>
+              </div>
+            </div>
           <button
             onClick={() =>
               setItemDelivery([
@@ -512,10 +569,89 @@ function AgrNewJobCard({
             +
           </button>
         </Box>
+        {/* Received Section */}
+        <Box  className="section" // style={{
+            //   opacity: isReceivedSectionEnabled ? 1 : 0.5,
+            //   pointerEvents: isReceivedSectionEnabled ? "auto" : "none",
+            // }} 
+            >
+              <h3 className="section-title">Received Section</h3>
+            <div className="received-section-container">
+              <div className="received-section-header">
+                <span>Weight</span>
+                <span>Touch</span>
+                <span>Purity</span>
+              </div>
+              {receivedMetalReturns.map((row, i) => (
+                <div
+                  key={row.id || `received-${i}`}
+                  className="received-section-row"
+                >
+                  <input
+                    type="number"
+                    placeholder="Weight"
+                    value={row.weight}
+                    onChange={(e) =>
+                      handleReceivedRowChange(i, "weight", e.target.value)
+                    }
+                    className="input-small"
+                    // disabled={isLoading || !isReceivedSectionEnabled}
+                    onWheel={(e) => e.target.blur()}
+                  />
+                  <span className="operator">x</span>
+                  <input
+                    type="number"
+                    placeholder="Touch"
+                    value={row.touch}
+                    onChange={(e) =>
+                      handleReceivedRowChange(i, "touch", e.target.value)
+                    }
+                    className="input-small"
+                    // disabled={isLoading || !isReceivedSectionEnabled}
+                    onWheel={(e) => e.target.blur()}
+                  />
+                  <span className="operator">=</span>
+                  <input
+                    type="text"
+                    readOnly
+                    placeholder="Purity"
+                    value={format(row.purity)}
+                    className="input-read-only input-small"
+                  />
+                </div>
+              ))}
+              <button
+                onClick={() =>
+                  setReceivedMetalReturns([
+                    ...receivedMetalReturns,
+                    { weight: "", touch: "", purity: "" },
+                  ])
+                }
+                className="circle-button"
+                // disabled={isLoading || !isReceivedSectionEnabled}
+              >
+                +
+              </button>
+            </div>
+            <div className="totals-section">
+              <div className="total-row">
+                <span className="total-purity-label">
+                  Total Received Purity:
+                </span>
+                <span className="total-purity-value">
+                  {format(totalReceivedPurity)}
+                </span>
+              </div>
+            </div>
+    
+        </Box>
       </DialogContent>
-      <DialogActions>
+      <DialogActions className="actionButton" >
         <Button autoFocus onClick={handleCloseJobcard}>
-          Save changes
+          {edit?"Update":"Save"}
+        </Button>
+          <Button autoFocus onClick={handleCloseJobcard}>
+          Print
         </Button>
       </DialogActions>
     </>
