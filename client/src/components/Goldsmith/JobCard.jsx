@@ -44,6 +44,8 @@ function JobCardDetails() {
     },
   ]);
 
+  const [receivedMetalReturns,setReceivedMetalReturns]=useState([{weight: "", touch: "", purity: ""} ])
+
 
   const [openJobcardDialog, setOpenJobcardDialog] = useState(false);
   const [edit, setEdit] = useState(false);
@@ -298,7 +300,8 @@ function JobCardDetails() {
           setGivenGold={setGivenGold}
           itemDelivery={itemDelivery}
           setItemDelivery={setItemDelivery}
-          
+          receivedMetalReturns={receivedMetalReturns}
+          setReceivedMetalReturns={setReceivedMetalReturns}
           name={name}
           edit={edit}
           handleCloseJobcard={handleCloseJobcard}
