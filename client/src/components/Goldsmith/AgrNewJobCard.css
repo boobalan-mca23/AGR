@@ -9,7 +9,6 @@
 
 .section {
     padding:12px;
-   
     background-color: #fefefe;
     border-radius: 8px;
     border: 2px solid #212a30;
@@ -63,13 +62,13 @@
     outline: none;
   }
    .input {
-    flex: 1;
+   
     padding: 10px 12px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     border-radius: 6px;
     border: 1px solid #ccc;
     box-sizing: border-box;
-    width: 110px;
+    width: 100px;
     transition: border-color 0.3s ease;
   }
   
@@ -85,7 +84,7 @@
   }
   
   .input-read-only {
-    flex: 1;
+ 
     padding: 10px 12px;
     font-size: 1rem;
     border-radius: 6px;
@@ -126,11 +125,11 @@
   .delIcon{
     cursor: pointer;
   }
- .givenGold {
-  display: grid;
-  grid-template-columns: 1fr 1fr ; /* 8 columns */
-  gap: 2px;
-  align-items: center;
+   .givenGold {
+   display: grid;
+   grid-template-columns: 1fr 1fr 1fr; /* 8 columns */
+   gap: 15px;
+   align-items: center;
 }
 
 .jobCardContainer{
@@ -146,7 +145,7 @@
 .select-small {
     width: 100px;
     padding: 10px 8px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     border-radius: 6px;
     border: 1px solid #ccc;
     background-color: #fff;
@@ -197,15 +196,15 @@
     font-size: 1rem;
   }
   .received-section-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
 }
 
 .received-section-header {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 10px;
   font-weight: bold;
   padding: 5px;
@@ -217,11 +216,12 @@
 
 .received-section-row {
   display: grid;
-  grid-template-columns: 1fr min-content 1fr min-content 1fr;
+  grid-template-columns: 1fr min-content 1fr min-content 1fr min-content;
   gap: 10px;
   align-items: center;
   min-width: 400px; 
 }
+
 .input-small {
   width: 100%;
   padding: 8px;
@@ -239,8 +239,35 @@
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-
+  font-size: 2rem !important;
+}
+.itemInput{
+  width:90px;
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
+input[type=number] {
+  -moz-appearance: textfield;
+}
 
+ .balance-text-owner {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #27ae60;   
+  }
+
+  .balance-text-goldsmith {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #c63626; 
+    }
+
+  .balance-amount {
+    font-size: 1rem;
+    color: #34495e;
+  } 

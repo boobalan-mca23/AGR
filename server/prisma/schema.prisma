@@ -136,7 +136,8 @@ model Goldsmith {
   phone      String?
   address    String?
   jobcards   Jobcard[]       
-  totals     Total[]         
+  totals     Total[]   
+  givenGold     givenGold[]      
   deliveries itemDelivery[]   
   received   Receivedsection[]
   repairs    Repair[]
@@ -150,11 +151,21 @@ model Jobcard {
   goldsmithId   Int
   goldsmith     Goldsmith    @relation(fields: [goldsmithId], references: [id])
   description   String
-  weight        Float
-  touch         Float
-  purity        Float
+  givenGold     givenGold[]
   deliveries    itemDelivery[]  
   received      Receivedsection[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now())
+}
+model givenGold{
+  id              Int          @id @default(autoincrement())
+  goldsmithId      Int?
+  jobcardId        Int?
+  weight          Float
+  touch           Float
+  purity          Float
+  goldsmith       Goldsmith?    @relation(fields: [goldsmithId], references: [id])
+  jobcard         Jobcard?      @relation(fields: [jobcardId], references: [id])
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now())
 }
