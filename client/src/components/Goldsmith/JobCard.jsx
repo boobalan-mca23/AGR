@@ -21,9 +21,10 @@ import {
 } from "@mui/material";
 import { useParams, useLocation } from "react-router-dom";
 import { Add, Visibility } from "@mui/icons-material";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import AgrNewJobCard from "./AgrNewJobCard";
-
+import axios from "axios";
+import { BACKEND_SERVER_URL } from "../../Config/Config";
 function JobCardDetails() {
   const { id, name } = useParams();
   const [description, setDescription] = useState("");
@@ -45,8 +46,8 @@ function JobCardDetails() {
   ]);
 
   const [receivedMetalReturns,setReceivedMetalReturns]=useState([{weight: "", touch: "", purity: ""} ])
-
-
+  const [masterItems,setMasterItems]=useState([])
+  const [touchList,setTouchList]=useState([])
   const [openJobcardDialog, setOpenJobcardDialog] = useState(false);
   const [edit, setEdit] = useState(false);
 
@@ -56,7 +57,24 @@ function JobCardDetails() {
   const handleCloseJobcard = () => {
     setOpenJobcardDialog(false);
   };
-
+  useEffect(()=>{
+     const fetchMasterItems=async()=>{
+      const res=await axios.get(`${BACKEND_SERVER_URL}/api/master-items/`)
+      
+      setMasterItems(res.data)
+     }
+      const fetchTouch = async () => {
+      try {
+        const res = await axios.get(`${BACKEND_SERVER_URL}/api/master-touch`);
+        setTouchList(res.data);
+      } catch (err) {
+        console.error("Failed to fetch touch values", err);
+       }
+  };
+     fetchMasterItems()
+     fetchTouch()
+  },[])
+  
   return (
     <>
       <Container maxWidth="xxl" sx={{ py: 3 }}>
@@ -302,6 +320,10 @@ function JobCardDetails() {
           setItemDelivery={setItemDelivery}
           receivedMetalReturns={receivedMetalReturns}
           setReceivedMetalReturns={setReceivedMetalReturns}
+          masterItems={masterItems}
+          setMasterItems={setMasterItems}
+          touchList={touchList}
+          setTouchList={setTouchList}
           name={name}
           edit={edit}
           handleCloseJobcard={handleCloseJobcard}

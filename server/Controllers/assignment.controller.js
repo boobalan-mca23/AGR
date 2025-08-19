@@ -1,56 +1,47 @@
 const { PrismaClient } = require("@prisma/client");
+const { all } = require("../../../SRJEWELLERY-main/SRJEWELLERY-main/server/Routes/jobcard.routes");
 const prisma = new PrismaClient();
 
 const createJobcard = async (req, res) => {
   try {
-    const {
-      goldsmithId,
-      description,
-      weight,
-      touch,
-      purity,
-      openingBalance,
-      totalPurity,
-      totalBalance,
-    } = req.body;
-    console.log('reqBody',req.body)
-    if (
-      !goldsmithId ||
-      weight == null ||
-      touch == null ||
-      purity == null ||
-      openingBalance == null ||
-      totalPurity == null ||
-      totalBalance == null
-    ) {
-      return res.status(400).json({
-        message: "Missing required fields for jobcard or total record.",
-      });
+      const {goldSmithId,description,givenGold}=req.body
+        const goldsmithInfo = await prisma.goldsmith.findUnique({
+          where: { id: parseInt(goldSmithId) },
+    });
+     if (!goldsmithInfo) {
+      return res.status(404).json({ error: "Goldsmith not found" });
     }
-    const jobcard = await prisma.jobcard.create({
-      data: {
-        goldsmithId: parseInt(goldsmithId),
-        description,
-        weight,
-        touch,
-        purity,
+     if (givenGold.length < 1) {
+      return res.status(400).json({ error: "Given gold data is required" });
+    }
+    const givenGoldArr = givenGold.map((item) => ({
+     
+      weight:parseFloat(item.weight)||null,
+      touch: parseFloat(item.touch)||null,
+      purity:parseFloat(item.purity)||null
+      
+    }));
+    await prisma.jobcard.create({
+           data: {
+            goldsmithId: parseInt(goldSmithId),
+            description,
+            givenGold: {
+               create: givenGoldArr,
+             }
       },
-    });
-
-    const totalRecord = await prisma.total.create({
-      data: {
-        goldsmithId: parseInt(goldsmithId),
-        openingBalance,
-        totalPurity,
-        totalBalance,
+});
+     const allJobCards = await prisma.jobcard.findMany({
+      where: {
+        goldsmithId: parseInt(goldSmithId),
       },
-    });
+      include: {
+        givenGold: true,
+        
+       },
+     
+    }); 
+    res.status(200).json({sucees:"true",allJobCards})
 
-    return res.status(201).json({
-      message: "Jobcard and Total record created successfully",
-      jobcard,
-      totalRecord,
-    });
   } catch (error) {
     console.error("Error creating jobcard:", error);
     res.status(500).json({
