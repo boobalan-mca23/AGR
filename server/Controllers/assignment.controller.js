@@ -1,47 +1,63 @@
 const { PrismaClient } = require("@prisma/client");
-const { all } = require("../../../SRJEWELLERY-main/SRJEWELLERY-main/server/Routes/jobcard.routes");
 const prisma = new PrismaClient();
 
 const createJobcard = async (req, res) => {
   try {
-      const {goldSmithId,description,givenGold}=req.body
-        const goldsmithInfo = await prisma.goldsmith.findUnique({
-          where: { id: parseInt(goldSmithId) },
+    const { goldSmithId, description, givenGold, total } = req.body;
+
+    const goldsmithInfo = await prisma.goldsmith.findUnique({
+      where: { id: parseInt(goldSmithId) },
     });
-     if (!goldsmithInfo) {
+
+    if (!goldsmithInfo) {
       return res.status(404).json({ error: "Goldsmith not found" });
     }
-     if (givenGold.length < 1) {
+    if (givenGold.length < 1) {
       return res.status(400).json({ error: "Given gold data is required" });
     }
     const givenGoldArr = givenGold.map((item) => ({
-     
-      weight:parseFloat(item.weight)||null,
-      touch: parseFloat(item.touch)||null,
-      purity:parseFloat(item.purity)||null
-      
+      goldsmithId: parseInt(goldSmithId),
+      weight: parseFloat(item.weight) || null,
+      touch: parseFloat(item.touch) || null,
+      purity: parseFloat(item.purity) || null,
     }));
+
+    const jobCardTotal = {
+      goldsmithId: parseInt(goldSmithId),
+      givenTotal: parseFloat(total?.givenTotal) || 0,
+      deliveryTotal: 0,
+      stoneTotalWt: 0,
+      jobCardBalance: parseFloat(total?.jobCardBalance) || 0,
+      openingBalance: parseFloat(total?.openingBalance) || 0,
+      receivedTotal: 0,
+      isFinished: "false",
+    };
+
     await prisma.jobcard.create({
-           data: {
-            goldsmithId: parseInt(goldSmithId),
-            description,
-            givenGold: {
-               create: givenGoldArr,
-             }
+      data: {
+        goldsmithId: parseInt(goldSmithId),
+        description,
+        givenGold: {
+          create: givenGoldArr,
+        },
+        total: {
+          create: jobCardTotal,
+        },
       },
-});
-     const allJobCards = await prisma.jobcard.findMany({
+    });
+
+    const allJobCards = await prisma.jobcard.findMany({
       where: {
         goldsmithId: parseInt(goldSmithId),
       },
       include: {
         givenGold: true,
-        
-       },
-     
-    }); 
-    res.status(200).json({sucees:"true",allJobCards})
-
+        total: true,
+      },
+    });
+    res
+      .status(200)
+      .json({ sucees: "true", message: "jobCard Created", allJobCards });
   } catch (error) {
     console.error("Error creating jobcard:", error);
     res.status(500).json({
@@ -51,260 +67,297 @@ const createJobcard = async (req, res) => {
   }
 };
 
-
-const getJobcardsByGoldsmithId = async (req, res) => {
+const updateJobCard = async (req, res) => {
+  const { goldSmithId, jobCardId } = req.params;
+  const { description, givenGold, itemDelivery, receiveSection, total } =
+    req.body;
   try {
-    const { goldsmithId } = req.params;
-
-    const jobcards = await prisma.jobcard.findMany({
-      where: {
-        goldsmithId: parseInt(goldsmithId),
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        deliveries: {
-          orderBy: { createdAt: "asc" },
-        },
-        received: {
-          orderBy: { createdAt: "asc" },
-        },
-      },
+    const goldsmithInfo = await prisma.goldsmith.findUnique({
+      where: { id: parseInt(goldSmithId) },
     });
 
-    const totalRecords = await prisma.total.findMany({
-      where: {
-        goldsmithId: parseInt(goldsmithId),
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return res.status(200).json({
-      success: true,
-      jobcards,
-      totalRecords,
-    });
-  } catch (error) {
-    console.error("Error fetching jobcards:", error);
-    res.status(500).json({
-      success: false,
-      error: "Internal Server Error during jobcard fetch",
-    });
-  }
-};
-
-const createItemDeliveries = async (req, res) => {
-  console.log("created items", req.body);
-  try {
-    const { goldsmithId, jobcardId, items } = req.body;
-
-    if (!Array.isArray(items)) {
-      console.error("Backend: Items is not an array!");
-      return res.status(400).json({ error: "Items must be an array." });
+    if (!goldsmithInfo) {
+      return res.status(404).json({ error: "Goldsmith not found" });
     }
 
-    if (!jobcardId) {
-      console.error("Backend: jobcardId is missing for item deliveries!");
+    if (givenGold.length < 1) {
       return res
         .status(400)
-        .json({ error: "jobcardId is required for item deliveries." });
+        .json({ error: "GoldSmith information is required" });
     }
-
-    const createdItems = [];
-
-    for (const item of items) {
-      const parsedItemWeight = parseFloat(item.itemWeight || 0);
-      const parsedStoneWeight = parseFloat(item.stoneWeight || 0);
-      const parsedWastageValue = parseFloat(item.wastageValue || 0);
-      const netWeight = parsedItemWeight - parsedStoneWeight;
-
-      let finalPurity;
-      let wastageTypeEnum;
-      switch (item.wastageType) {
-        case "Touch":
-          finalPurity = item.finalPurity ?? parsedWastageValue;
-          wastageTypeEnum = "TOUCH";
-          break;
-        case "%":
-          finalPurity =
-            item.finalPurity ??
-            netWeight + (parsedWastageValue / 100) * netWeight;
-          wastageTypeEnum = "PERCENTAGE";
-          break;
-        case "+":
-          finalPurity = item.finalPurity ?? netWeight + parsedWastageValue;
-          wastageTypeEnum = "FIXED";
-          break;
-        default:
-          console.error(
-            `Backend: Invalid wastage type received: ${item.wastageType}`
-          );
-          wastageTypeEnum = "TOUCH";
-          finalPurity = item.finalPurity ?? parsedWastageValue;
-      }
-
-      try {
-        console.log("Passed final purity", finalPurity);
-        const entry = await prisma.itemDelivery.create({
-          data: {
-            itemName: item.itemName,
-            itemWeight: parsedItemWeight,
-            type: item.type || "Jewelry",
-            stoneWeight: parsedStoneWeight,
-            netWeight,
-            wastageType: wastageTypeEnum,
-            wastageValue: parsedWastageValue,
-            finalPurity,
-            jobcardId: parseInt(jobcardId),
-            goldsmithId: parseInt(goldsmithId),
-          },
-        });
-        console.log(" item delivery testtttttt:", entry);
-        createdItems.push(entry);
-      } catch (dbError) {
-        console.error(
-          `Backend: Database error creating item delivery for item ${item.itemName}:`,
-          dbError
-        );
-      }
+    if (!total) {
+      return res.status(400).json({ error: "Total information is required" });
     }
-
-    if (createdItems.length === 0 && items.length > 0) {
-      return res.status(500).json({
-        error:
-          "No items were created, check backend logs for individual item errors.",
-      });
-    }
-
-    res.status(201).json(createdItems);
-  } catch (error) {
-    console.error("Backend: Error in createItemDeliveries:", error);
-    res
-      .status(500)
-      .json({ error: "Internal server error during item delivery creation" });
-  }
-};
-const createReceivedSection = async (req, res) => {
-  try {
-    console.log("Received details", req.body);
-    const { weight, touch, goldsmithId, jobcardId } = req.body;
-    if (!weight || !touch || !goldsmithId || !jobcardId) {
-      return res.status(400).json({
-        success: false,
-        error:
-          "All fields (weight, touch, goldsmithId, jobcardId) are required",
-      });
-    }
-    const weightNum = parseFloat(weight);
-    const touchNum = parseFloat(touch);
-    const goldsmithIdNum = parseInt(goldsmithId);
-    const jobcardIdNum = parseInt(jobcardId);
-
-    if (
-      isNaN(weightNum) ||
-      isNaN(touchNum) ||
-      isNaN(goldsmithIdNum) ||
-      isNaN(jobcardIdNum)
-    ) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid numeric values provided",
-      });
-    }
-    const purity = (weightNum * touchNum) / 100;
-
-    const jobcardExists = await prisma.jobcard.findUnique({
-      where: { id: jobcardIdNum },
-    });
-
-    if (!jobcardExists) {
-      return res.status(404).json({
-        success: false,
-        error: "Jobcard not found",
-      });
-    }
-    const goldsmithExists = await prisma.goldsmith.findUnique({
-      where: { id: goldsmithIdNum },
-    });
-
-    if (!goldsmithExists) {
-      return res.status(404).json({
-        success: false,
-        error: "Goldsmith not found",
-      });
-    }
-    const receivedSection = await prisma.receivedsection.create({
+    // update jobCardTotals
+    const totalOfJobcard = await prisma.total.update({
+      where: {
+        id: total?.id,
+      },
       data: {
-        weight: weightNum,
-        touch: touchNum,
-        purity: purity,
-        jobcard: { connect: { id: jobcardIdNum } },
-        goldsmith: { connect: { id: goldsmithIdNum } },
+        givenTotal: parseFloat(total?.givenTotal) || 0,
+        deliveryTotal: parseFloat(total?.deliveryTotal) || 0,
+        stoneTotalWt: parseFloat(total?.stoneTotalWt) || 0,
+        jobCardBalance: parseFloat(total?.jobCardBalance) || 0,
+        openingBalance: parseFloat(total?.openingBalance) || 0,
+        receivedTotal: parseFloat(total?.receivedTotal) || 0,
+      },
+    });
+    // update jobCard Description
+    await prisma.jobcard.update({
+      where: {
+        id: parseInt(jobCardId),
+      },
+      data: {
+        description: description,
+      },
+    });
+    // update given gold information
+    for (const gold of givenGold) {
+      const data = {
+        goldsmithId: parseInt(goldSmithId),
+        jobcardId: parseInt(jobCardId),
+        weight: parseFloat(gold.weight) || 0,
+        touch: parseFloat(gold.touch) || 0,
+        purity: parseFloat(gold.purity) || 0,
+      };
+      if (gold?.id) {
+        //if id is there update or create
+        await prisma.givenGold.update({
+          where: {
+            id: gold.id,
+          },
+          data,
+        });
+      } else {
+        await prisma.givenGold.create({
+          data,
+        });
+      }
+    }
+
+    // update itemDelivery information
+    if (itemDelivery.length >= 1) {
+      for (const item of itemDelivery) {
+        if (item?.id) {
+          //itemDelivery update if id is there or create
+
+          const updateItemDel = await prisma.itemDelivery.update({
+            where: {
+              id: item.id,
+            },
+            data: {
+              itemName: item?.itemName,
+              itemWeight: parseFloat(item?.itemWeight) || 0,
+              touch: parseFloat(item?.touch) || 0,
+              sealName: item?.sealName,
+              netWeight: parseFloat(item?.netWeight) || 0,
+              wastageType: item?.wastageType,
+              wastageValue: parseFloat(item?.wastageValue) || 0,
+              finalPurity: parseFloat(item.finalPurity) || 0,
+            },
+          });
+
+          // if dedcution id is there update or create
+          if (item.deduction.length >= 1) {
+            for (const ded of item.deduction) {
+              const data = {
+                deliveryId: updateItemDel.id,
+                type: ded.type || null,
+                weight: parseFloat(ded.weight) || 0,
+                stoneWt: parseFloat(ded.stoneWt) || 0,
+              };
+              if (ded.id) {
+                await prisma.deduction.update({
+                  where: {
+                    id: ded.id,
+                  },
+                  data,
+                });
+              } else {
+                await prisma.deduction.create({ data });
+              }
+            }
+          }
+        } else {
+          // itemDelivery create
+          let deductionArr = [];
+
+          if (item.deduction && item.deduction.length >= 1) {
+            deductionArr = item.deduction.map((dely) => ({
+              weight: parseFloat(dely.weight) || 0,
+              type: dely.type || null,
+            }));
+          }
+
+          await prisma.itemDelivery.create({
+            data: {
+              goldsmithId: parseInt(goldSmithId),
+              jobcardId: parseInt(jobCardId),
+              itemName: item?.itemName,
+              itemWeight: parseFloat(item?.itemWeight) || 0,
+              touch: parseFloat(item?.touch) || 0,
+              sealName: item?.sealName,
+              netWeight: parseFloat(item?.netWeight) || 0,
+              wastageType: item?.wastageType,
+              wastageValue: parseFloat(item?.wastageValue) || 0,
+              finalPurity: parseFloat(item.finalPurity) || 0,
+              ...(deductionArr.length > 0 && {
+                deduction: {
+                  create: deductionArr,
+                },
+              }),
+            },
+          });
+        }
+      }
+    }
+    // receive section update and create
+    if (receiveSection.length >= 1) {
+      for (const receive of receiveSection) {
+        const data = {
+          goldsmithId: parseInt(goldSmithId),
+          jobcardId: parseInt(jobCardId),
+          weight: parseFloat(receive.weight) || 0,
+          touch: parseFloat(receive.touch) || null,
+          purity: parseFloat(receive.purity) || 0,
+        };
+        if (receive.id) {
+          await prisma.receivedsection.update({
+            where: { id: parseInt(receive.id) },
+            data,
+          });
+        } else {
+          await prisma.receivedsection.create({ data });
+        }
+      }
+    }
+
+    const allJobCards = await prisma.jobcard.findMany({
+      where: {
+        goldsmithId: parseInt(goldSmithId),
       },
       include: {
-        jobcard: true,
-        goldsmith: true,
+        givenGold: true,
+        deliveries: {
+          include: {
+            deduction: true,
+          },
+        },
+        received: true,
+        total: true,
       },
     });
 
-    const existingBalance = await prisma.balances.findFirst({
-      where: { goldsmithId: goldsmithIdNum },
-    });
-
-    if (existingBalance) {
-      await prisma.balances.update({
-        where: { id: existingBalance.id },
-        data: {
-          totalReceivedWeight: { increment: weightNum },
-          totalReceivedPurity: { increment: purity },
-          totalReceivedTouch: { increment: touchNum },
-        },
-      });
-    } else {
-      await prisma.balances.create({
-        data: {
-          goldsmithId: goldsmithIdNum,
-          totalReceivedWeight: weightNum,
-          totalReceivedPurity: purity,
-          totalReceivedTouch: touchNum,
-          totalDeliveries: 0,
-          totalItemWeight: 0,
-          totalNetWeight: 0,
-          totalPurity: 0,
-        },
-      });
-    }
-
-    return res.status(201).json({
-      success: true,
-      data: receivedSection,
-      message: "Received section created successfully",
-    });
+    res
+      .status(200)
+      .json({ sucees: "true", message: "jobCard Updated", allJobCards });
   } catch (error) {
-    console.error("Error creating received section:", error);
-    if (error.code === "P2002") {
-      return res.status(400).json({
-        success: false,
-        error: "This jobcard already has a received section record",
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error",
-      details: error.message,
+    console.error("Error creating jobcard:", error);
+    res.status(500).json({
+      message: "Server error during jobcard creation",
+      error: error.message,
     });
-  } finally {
-    await prisma.$disconnect();
   }
 };
+
+// getAllJobCard By GoldSmithId
+
+const getAllJobCardsByGoldsmithId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const goldsmithInfo = await prisma.goldsmith.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+     
+    });
+
+    if (!goldsmithInfo) {
+      return res.status(404).json({ error: "Goldsmith not found" });
+    }
+
+    const allJobCards = await prisma.jobcard.findMany({
+      where: {
+        goldsmithId: parseInt(id),
+      },
+      include: {
+        givenGold:true,
+        deliveries:{
+          include:{
+            deduction:true
+          }
+        },
+        received:true,
+        total:true,
+
+      },
+     
+    });
+    let jobCardLength=await prisma.jobcard.findMany()
+    
+    
+ return res.status(200).json({
+      goldsmith: {
+        id: goldsmithInfo.id,
+        name: goldsmithInfo.name,
+        address:goldsmithInfo.address,
+        phoneNo:goldsmithInfo.phone,
+        
+      },
+      jobCards: allJobCards,
+      jobCardLength:jobCardLength.length+1,
+      
+    });
+  } catch (err) {
+    console.error("Error fetching job card info:", err);
+    return res.status(500).json({ error: "Server Error" });
+  }
+};
+
+// getJobCardBy Id
+
+const getJobCardById=async(req,res)=>{
+    const {id}=req.params
+   try{
+    
+      const goldSmithInfo = await prisma.jobcard.findUnique({where:{id:parseInt(id)}}); 
+
+        if (!goldSmithInfo) {
+         return res.status(404).json({ error: "Job Card not found" }); 
+        }
+      
+      
+        const jobCardInfo=await prisma.jobcard.findMany({
+          where:{
+            id:parseInt(id)
+          },
+          include:{
+            goldsmith:true,
+            givenGold:true,
+            deliveries:{
+              include:{
+                deduction:true
+              }
+            },
+            received:true,
+            total:true
+           }
+        })
+      
+       
+    
+      let lastJobCard=(await prisma.total.findMany({where:{goldsmithId:goldSmithInfo.goldsmithId}})).at(-1)
+       
+       return res.status(200).json({"jobcard":jobCardInfo,lastJobCard:lastJobCard})
+
+      } catch(err){
+      return res.status(500).json({err:"Server Error"})
+   }
+  }
 
 module.exports = {
   createJobcard,
-  getJobcardsByGoldsmithId,
-  createItemDeliveries,
-  createReceivedSection,
+  updateJobCard,
+  getAllJobCardsByGoldsmithId,
+  getJobCardById
 };
