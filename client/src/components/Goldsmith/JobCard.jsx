@@ -310,8 +310,10 @@ function JobCardDetails() {
         onClose={handleCloseJobcard}
         fullWidth
         maxWidth="md"
+       
       >
         <AgrNewJobCard
+         
           description={description}
           setDescription={setDescription}
           givenGold={givenGold}
@@ -333,3 +335,8 @@ function JobCardDetails() {
   );
 }
 export default JobCardDetails;
+
+const box={
+     backgroundColor:"red"
+} 
+ 

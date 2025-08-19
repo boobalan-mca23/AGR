@@ -136,10 +136,10 @@ model Goldsmith {
   phone      String?
   address    String?
   jobcards   Jobcard[]       
-  totals     Total[]   
-  givenGold     givenGold[]      
+  givenGold  givenGold[]      
   deliveries itemDelivery[]   
   received   Receivedsection[]
+  totals     Total[]   
   repairs    Repair[]
   summaries  Balances[]       
   createdAt  DateTime       @default(now())
@@ -150,62 +150,80 @@ model Jobcard {
   id            Int          @id @default(autoincrement())
   goldsmithId   Int
   goldsmith     Goldsmith    @relation(fields: [goldsmithId], references: [id])
-  description   String
+  description   String?
   givenGold     givenGold[]
   deliveries    itemDelivery[]  
   received      Receivedsection[]
+  total         Total[] 
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now())
 }
 model givenGold{
   id              Int          @id @default(autoincrement())
-  goldsmithId      Int?
-  jobcardId        Int?
-  weight          Float
-  touch           Float
-  purity          Float
+  goldsmithId     Int?
+  jobcardId       Int?
+  weight          Float?
+  touch           Float?
+  purity          Float?
   goldsmith       Goldsmith?    @relation(fields: [goldsmithId], references: [id])
   jobcard         Jobcard?      @relation(fields: [jobcardId], references: [id])
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @default(now())
-}
-
-model Total {
-  id              Int         @id @default(autoincrement())
-  goldsmithId     Int
-  goldsmith       Goldsmith   @relation(fields: [goldsmithId], references: [id])
-  totalPurity     Float
-  openingBalance  Float
-  totalBalance    Float
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @default(now())
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @default(now())
 }
 
 model itemDelivery {
   id               Int           @id @default(autoincrement())
-  itemName         String
-  itemWeight       Float
-  type             String        // stone type
-  stoneWeight      Float
-  netWeight        Float
-  wastageType      WastageType
-  wastageValue     Float
-  finalPurity      Float
+  itemName         String?
+  itemWeight       Float?
+  touch            Float?
+  sealName         String?
+  netWeight        Float?
+  wastageType      String?
+  wastageValue     Float?
+  finalPurity      Float?
   goldsmithId      Int?
   goldsmith        Goldsmith?    @relation(fields: [goldsmithId], references: [id])
   jobcardId        Int?
   jobcard          Jobcard?      @relation(fields: [jobcardId], references: [id])
+  deduction        deduction[]
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @default(now())
+}
+model deduction{
+  id               Int           @id @default(autoincrement())
+  type             String?
+  deliveryId       Int
+  weight           Float?
+  stoneWt          Float?
+  itemDelivery     itemDelivery  @relation(fields: [deliveryId ], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @default(now())
+
+}
+model Total {
+  id              Int         @id @default(autoincrement())
+  jobcardId       Int?
+  jobcard         Jobcard?      @relation(fields: [jobcardId], references: [id])
+  goldsmithId     Int
+  goldsmith       Goldsmith   @relation(fields: [goldsmithId], references: [id])
+  givenTotal      Float?
+  deliveryTotal   Float?
+  stoneTotalWt    Float?
+  openingBalance  Float?
+  jobCardBalance  Float?
+  receivedTotal   Float?
+  isFinished      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now())
 }
 
 model Receivedsection {
   id          Int       @id @default(autoincrement())
-  weight      Float
-  touch       Float
-  purity      Float
-  jobcardId   Int?    
-  goldsmithId Int?
+  weight      Float?
+  touch       Float?
+  purity      Float?
+  jobcardId   Int    
+  goldsmithId Int
   jobcard     Jobcard?  @relation(fields: [jobcardId], references: [id])
   goldsmith   Goldsmith? @relation(fields: [goldsmithId], references: [id])
   createdAt   DateTime  @default(now())
