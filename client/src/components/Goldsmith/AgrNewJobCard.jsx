@@ -39,12 +39,15 @@ function AgrNewJobCard({
   setReceivedMetalReturns,
   masterItems,
   touchList,
+  openingBalance,
+  jobCardLength,
+  handleSaveJobCard
 }) {
   const today = new Date().toLocaleDateString("en-IN");
   const [time, setTime] = useState(null);
   const stoneOptions = ["Stone", "Enamel", "Beads", "Others"];
   const symbolOptions = ["Touch", "%", "+"];
-  const [openingBalance, setOpeningBalance] = useState(0.0);
+  const [jobCardBalance,setJobCardBalance]=useState(0)
 
   const recalculateFinalPurity = (item) => {
     const totalItemDeductions = item.stone.reduce(
@@ -168,7 +171,29 @@ function AgrNewJobCard({
       setGivenGold(filtergold);
     }
   };
-  useEffect(() => {
+  
+
+  const totalGivenToGoldsmith = openingBalance + totalInputPurityGiven;
+  const totalFinishedPurity = itemDelivery.reduce(
+    (sum, item) => sum + parseFloat(item.finalPurity || 0),
+    0
+  );
+  const totalReceivedPurity = receivedMetalReturns.reduce(
+    (sum, row) => sum + parseFloat(row.purity || 0),
+    0
+  );
+  
+  const handleSave=()=>{
+     if(edit){
+
+     }else{
+         handleSaveJobCard(totalInputPurityGiven,jobCardBalance,openingBalance)
+     }
+    
+    
+  }
+
+ useEffect(() => {
     const updateTime = () => {
       const now = new Date();
 
@@ -185,19 +210,24 @@ function AgrNewJobCard({
     const timer = setInterval(updateTime, 60000);
     return () => clearInterval(timer);
   }, []);
-  const totalGivenToGoldsmith = openingBalance + totalInputPurityGiven;
-  const totalFinishedPurity = itemDelivery.reduce(
-    (sum, item) => sum + parseFloat(item.finalPurity || 0),
-    0
-  );
-  const totalReceivedPurity = receivedMetalReturns.reduce(
-    (sum, row) => sum + parseFloat(row.purity || 0),
-    0
-  );
-  const balanceDifference=(totalGivenToGoldsmith+openingBalance)-totalFinishedPurity
-  
+const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
+ useEffect(() => {
+     const balance =
+       safeParse(openingBalance) >= 0
+         ? safeParse(totalInputPurityGiven) + safeParse(openingBalance)
+         : safeParse(openingBalance) + safeParse(totalInputPurityGiven);// we need to add openbalance and givenGold
+   
+     let difference =balance - safeParse(totalFinishedPurity); // total item delivery
  
+     if (receivedMetalReturns.length >= 1) {
+       const totalReceived = totalReceivedPurity
+ 
+       difference -= totalReceived;
+     }
+ 
+     setJobCardBalance(format(difference));
 
+   }, [givenGold,itemDelivery,receivedMetalReturns]);
   return (
     <>
       <DialogTitle className="dialogTitle" id="customized-dialog-title">
@@ -218,6 +248,7 @@ function AgrNewJobCard({
 
       <DialogContent dividers>
         <Box className="jobCardheader">
+          <Typography>ID:{edit?1:jobCardLength}</Typography>
           <Typography>Name:{name}</Typography>
           <Typography>Date:{today}</Typography>
           <Typography>Time:{time}</Typography>
@@ -311,7 +342,7 @@ function AgrNewJobCard({
           <h3 className="section-title">Balance</h3>
           <div className="balance-block">
             <div className="balance-display-row">
-              <span className="balance-label">Opening Balance:</span>
+              <span className="balance-label">{openingBalance>0?"Opening Balance":"ExceesBalance"}</span>
               <span className="balance-value">{format(openingBalance)}</span>
             </div>
             <div className="balance-display-row">
@@ -767,23 +798,23 @@ function AgrNewJobCard({
           </div>
         </Box>
          <Box className="section" style={{textAlign:"center"}}>
-           { totalGivenToGoldsmith-totalFinishedPurity<0? (
+           { jobCardBalance<0? (
                   <p className="balance-text-owner">
                     Owner should give balance:
                     <span className="balance-amount">
-                      {format(balanceDifference)}
+                      {format(jobCardBalance)}
                     </span>
                   </p>
-                ) : totalGivenToGoldsmith-totalFinishedPurity>0? (
-                  <p className="balance-text-artisan">
+                ) :jobCardBalance>0? (
+                  <p className="balance-text-goldsmith ">
                     Goldsmith should give balance:
                     <span className="balance-amount">
-                      {format(balanceDifference)}
+                      {format(jobCardBalance)}
                     </span>
                   </p>
-                ) :(<p>balance Nill:
+                ) :(<p className="balanceNill">balance Nill:
                     <span className="balance-amount">
-                      {format(balanceDifference)}
+                      {format(jobCardBalance)}
                     </span> </p>)
                    
                 }
@@ -791,7 +822,7 @@ function AgrNewJobCard({
          </Box>
       </DialogContent>
       <DialogActions className="actionButton">
-        <Button autoFocus onClick={handleCloseJobcard}>
+        <Button autoFocus onClick={handleSave}>
           {edit ? "Update" : "Save"}
         </Button>
         <Button autoFocus onClick={handleCloseJobcard}>
