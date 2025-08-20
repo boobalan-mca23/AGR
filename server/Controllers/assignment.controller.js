@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 const createJobcard = async (req, res) => {
   try {
     const { goldSmithId, description, givenGold, total } = req.body;
-
+     console.log('createController',req.body)
     const goldsmithInfo = await prisma.goldsmith.findUnique({
       where: { id: parseInt(goldSmithId) },
     });
@@ -57,7 +57,7 @@ const createJobcard = async (req, res) => {
     });
     res
       .status(200)
-      .json({ sucees: "true", message: "jobCard Created", allJobCards });
+      .json({ sucees: "true", message: "JobCard Created", allJobCards });
   } catch (error) {
     console.error("Error creating jobcard:", error);
     res.status(500).json({
@@ -355,9 +355,36 @@ const getJobCardById=async(req,res)=>{
    }
   }
 
+  const getPreviousJobCardBal=async(req,res)=>{
+       const{id}=req.params
+       
+       try{
+          const jobCards = await prisma.total.findMany({
+              where:{
+              goldsmithId:parseInt(id)
+             } 
+          });
+         
+          if(jobCards.length>=1){
+             const jobCard=jobCards.at(-1)
+             
+              res.status(200).json({"status":"balance",balance:jobCard.jobCardBalance})
+          }else{
+            res.status(200).json({"status":"nobalance",balance:0})
+          }
+          
+        }catch(err){
+           console.error("Previous Balance Error:", err);
+           return res.status(500).json({ error: err.message });
+        
+       }
+       
+     
+  }
 module.exports = {
   createJobcard,
   updateJobCard,
   getAllJobCardsByGoldsmithId,
-  getJobCardById
+  getJobCardById,
+  getPreviousJobCardBal
 };

@@ -83,6 +83,7 @@ function Mastergoldsmith() {
             label="Goldsmith Name"
             type="text"
             fullWidth
+            autoComplete="off"
             value={goldsmithName}
             onChange={(e) => setgoldsmithName(e.target.value)}
           />
@@ -91,6 +92,7 @@ function Mastergoldsmith() {
             label="Phone Number"
             type="tel"
             fullWidth
+            autoComplete="off"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
           />
@@ -102,6 +104,7 @@ function Mastergoldsmith() {
             multiline
             rows={4}
             value={address}
+            autoComplete="off"
             onChange={(e) => setAddress(e.target.value)}
           />
         </DialogContent>

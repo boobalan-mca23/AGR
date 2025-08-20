@@ -256,18 +256,23 @@ input[type=number] {
 }
 
  .balance-text-owner {
-    font-size: 1rem;
+    font-size: 1.5rem;
     font-weight: bold;
-    color: #27ae60;   
+    color: #ea1801;
+     
   }
 
   .balance-text-goldsmith {
-    font-size: 1rem;
+    font-size: 1.5rem;
     font-weight: bold;
-    color: #c63626; 
+    color: #27ae60; 
     }
-
-  .balance-amount {
-    font-size: 1rem;
-    color: #34495e;
+   
+  .balanceNill {
+    font-size: 1.5rem;
+    font-weight:bold;
+    color: rgb(236, 172, 33);
   } 
+  .balance-amount{
+    color: black;
+  }
