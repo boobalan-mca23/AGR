@@ -452,6 +452,7 @@ const handleFilterJobCard=(id,index)=>{
         onClose={handleCloseJobcard}
         fullWidth
         maxWidth="md"
+         
       >
         <AgrNewJobCard
           description={description}
