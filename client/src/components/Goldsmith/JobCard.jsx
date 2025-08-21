@@ -38,16 +38,17 @@ function JobCardDetails() {
 
   const [itemDelivery, setItemDelivery] = useState([
     {
-      ItemName: "",
-      ItemWeight: "",
-      Touch: "",
-      stone: [{ type: "", weight: "" }],
-      netwt: "",
+      itemName: "",
+      itemWeight: "",
+      touch: "",
+      deduction: [{ type: "", weight: "" }],
+      netWeight: "",
       wastageType: "",
       wastageValue: "",
       finalPurity: "",
     },
   ]);
+
 
   const [receivedMetalReturns, setReceivedMetalReturns] = useState([
     { weight: "", touch: "", purity: "" },
@@ -78,7 +79,44 @@ function JobCardDetails() {
   };
   const handleCloseJobcard = () => {
     setOpenJobcardDialog(false);
+    setEdit(false)
+    setDescription("")
+    setGivenGold([{ weight: "", touch: "", purity: "" }])
+    setItemDelivery([{
+      itemName: "",
+      ItemWeight: "",
+      Touch: "",
+      deduction: [{ type: "", weight: "" }], 
+      netwt: "",
+      wastageType: "",
+      wastageValue: "",
+      finalPurity: "",
+    },])
+    setReceivedMetalReturns([ { weight: "", touch: "", purity: "" }])
   };
+
+
+const handleFilterJobCard=(id,index)=>{
+    setJobCardId(id);
+    setJobCardIndex(index); 
+    let copy=[...jobCards] 
+    const filteredJobcard = copy.filter((item, _) => item.id === id);
+    setDescription( JSON.parse(JSON.stringify(filteredJobcard[0]?.description||"")))
+    setGivenGold(
+      JSON.parse(JSON.stringify(filteredJobcard[0]?.givenGold || []))
+    );
+    setItemDelivery(
+      JSON.parse(JSON.stringify(filteredJobcard[0]?.deliveries || []))
+    );
+     setReceivedMetalReturns(
+      JSON.parse(JSON.stringify(filteredJobcard[0]?.received || []))
+    );
+     setOpeningBalance(JSON.parse(JSON.stringify(filteredJobcard[0]?.total[0]?.openingBalance || 0)))
+     setOpenJobcardDialog(true);
+     setEdit(true);
+}
+
+
 
   // save jobCard Api
   const handleSaveJobCard = async (
@@ -108,29 +146,53 @@ function JobCardDetails() {
       );
       handleCloseJobcard();
       setGivenGold([{ weight: "", touch: "", purity: "" }])
+      setDescription("")
       toast.success(response.data.message);
     } catch (err) {
       toast.error(err.message);
     }
   };
-const handleFilterJobCard=(id,index)=>{
-    setJobCardId(id);
-    setJobCardIndex(index); 
-    let copy=[...jobCards] 
-    const filteredJobcard = copy.filter((item, _) => item.id === id);
-    setDescription( JSON.parse(JSON.stringify(filteredJobcard[0]?.description||"")))
-    setGivenGold(
-      JSON.parse(JSON.stringify(filteredJobcard[0]?.givenGold || []))
-    );
-    setItemDelivery(
-      JSON.parse(JSON.stringify(filteredJobcard[0]?.deliveries || []))
-    );
-     setReceivedMetalReturns(
-      JSON.parse(JSON.stringify(filteredJobcard[0]?.received || []))
-    );
-    setOpenJobcardDialog(true);
-    setEdit(true);
-}
+
+   const handleUpdateJobCard = async (
+    givenTotal,
+    deliveryTotal,
+    receivedTotal,
+    jobCardBalance,
+    openingBalance
+  ) => {
+    const payload = {
+      description,
+      givenGold,
+      itemDelivery,
+      receiveSection:receivedMetalReturns,
+      total: {
+        id:jobCards[jobCardIndex]?.total[0]?.id,
+        givenTotal,
+        deliveryTotal,
+        receivedTotal,
+        jobCardBalance,
+        openingBalance
+      },
+    };
+    try {
+      const response = await axios.put(
+        `${BACKEND_SERVER_URL}/api/assignments/${id}/${jobCardId}`, // id is GoldSmith and jobCard id
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      handleCloseJobcard();
+      setGivenGold([{ weight: "", touch: "", purity: "" }])
+      setDescription("")
+      toast.success(response.data.message);
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
   useEffect(() => {
     const fetchJobCards = async () => {
       try {
@@ -397,8 +459,10 @@ const handleFilterJobCard=(id,index)=>{
           name={name}
           edit={edit}
           jobCardLength={jobCardLength}
+          jobCardId={jobCardId}
           handleCloseJobcard={handleCloseJobcard}
           handleSaveJobCard={handleSaveJobCard}
+          handleUpdateJobCard={handleUpdateJobCard}
         />
       </Dialog>
       <ToastContainer
