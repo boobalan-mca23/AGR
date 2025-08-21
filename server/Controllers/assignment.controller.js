@@ -1,6 +1,42 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// helper function to update nextJobCardBalance
+
+const updateNextJobBalance=async(id,goldsmithId)=>{
+   let goldSmithJob=await prisma.total.findMany({
+      where:{
+        id:{gte:id},
+        goldsmithId:parseInt(goldsmithId)
+      }
+    })
+  
+    while(goldSmithJob.length!=1){
+         const prevJob=goldSmithJob[0]
+        const currentJob=goldSmithJob[1]
+   
+       await prisma.total.update({
+              where:{
+                id:currentJob.id,
+                goldsmithId:parseFloat(goldsmithId)
+              },
+           data:{ 
+             openingBalance:prevJob.jobCardBalance,
+             jobCardBalance:(currentJob.givenTotal+prevJob.jobCardBalance)-currentJob.deliveryTotal
+            }
+        })
+    
+       goldSmithJob=await prisma.total.findMany({
+         where:{
+          id:{gt:prevJob.id},
+          goldsmithId:parseFloat(goldsmithId)
+      }
+    })
+      
+    }
+} 
+
+
 const createJobcard = async (req, res) => {
   try {
     const { goldSmithId, description, givenGold, total } = req.body;
@@ -231,6 +267,7 @@ const updateJobCard = async (req, res) => {
         }
       }
     }
+    await updateNextJobBalance(totalOfJobcard.id,goldSmithId) // update nextJobCardNBalance
 
     const allJobCards = await prisma.jobcard.findMany({
       where: {

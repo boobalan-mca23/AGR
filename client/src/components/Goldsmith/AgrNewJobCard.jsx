@@ -25,6 +25,7 @@ import { MdDeleteForever } from "react-icons/md";
 import { useState, useEffect } from "react";
 import "./AgrNewJobCard.css";
 import React from "react";
+import { Opacity } from "@mui/icons-material";
 function AgrNewJobCard({
   edit,
   handleCloseJobcard,
@@ -41,24 +42,26 @@ function AgrNewJobCard({
   touchList,
   openingBalance,
   jobCardLength,
-  handleSaveJobCard
+  handleSaveJobCard,
+  handleUpdateJobCard,
+  jobCardId,
 }) {
   const today = new Date().toLocaleDateString("en-IN");
   const [time, setTime] = useState(null);
   const stoneOptions = ["Stone", "Enamel", "Beads", "Others"];
   const symbolOptions = ["Touch", "%", "+"];
-  const [jobCardBalance,setJobCardBalance]=useState(0)
+  const [jobCardBalance, setJobCardBalance] = useState(0);
 
   const recalculateFinalPurity = (item) => {
-    const totalItemDeductions = item.stone.reduce(
+    const totalItemDeductions = item.deduction.reduce(
       (sum, deduction) => sum + parseFloat(deduction.weight || 0),
       0
     );
     const itemNetWeightCalc =
-      parseFloat(item.ItemWeight || 0) - totalItemDeductions;
+      parseFloat(item.itemWeight || 0) - totalItemDeductions;
     const wastageValue = parseFloat(item.wastageValue || 0);
 
-    if (item.wastageType === "Touch") {
+    if (item.wastageType === "touch") {
       return (itemNetWeightCalc * wastageValue) / 100;
     } else if (item.wastageType === "%") {
       return itemNetWeightCalc + (itemNetWeightCalc * wastageValue) / 100;
@@ -75,14 +78,6 @@ function AgrNewJobCard({
     !isNaN(w) && !isNaN(t)
       ? ((parseFloat(w) * parseFloat(t)) / 100).toFixed(3)
       : "";
-  const handleStone = (index) => {
-    let newDeduction = { dedcution: "", weight: "" };
-
-    let updated = [...itemDelivery];
-    updated[index].stone.push(newDeduction);
-
-    setItemDelivery(updated);
-  };
 
   const handleGoldRowChange = (i, field, val) => {
     const copy = [...givenGold];
@@ -98,7 +93,7 @@ function AgrNewJobCard({
     0
   );
   const totalDeduction = (i, copy) => {
-    return copy[i].stone.reduce(
+    return copy[i].deduction.reduce(
       (acc, val) => acc + Number(val.weight || 0), // convert to number
       0
     );
@@ -108,9 +103,9 @@ function AgrNewJobCard({
     const copy = [...itemDelivery];
     copy[i][field] = val;
 
-    if (field === "ItemWeight") {
-      copy[i]["netwt"] =
-        copy[i]["ItemWeight"] - Number(totalDeduction(i, copy));
+    if (field === "itemWeight") {
+      copy[i]["netWeight"] =
+        copy[i]["itemWeight"] - Number(totalDeduction(i, copy));
     }
     copy[i].finalPurity = recalculateFinalPurity(copy[i]);
     setItemDelivery(copy);
@@ -128,11 +123,11 @@ function AgrNewJobCard({
   const handleDeductionChange = (itemIndex, deductionIndex, field, val) => {
     console.log("dedIndex", deductionIndex);
     const updated = [...itemDelivery];
-    updated[itemIndex].stone[deductionIndex][field] = val;
+    updated[itemIndex].deduction[deductionIndex][field] = val;
     if (field === "weight") {
       console.log("totalDed", totalDeduction(itemIndex, updated));
-      updated[itemIndex]["netwt"] =
-        updated[itemIndex]["ItemWeight"] -
+      updated[itemIndex]["netWeight"] =
+        updated[itemIndex]["itemWeight"] -
         Number(totalDeduction(itemIndex, updated));
     }
     updated[itemIndex].finalPurity = recalculateFinalPurity(updated[itemIndex]);
@@ -151,8 +146,8 @@ function AgrNewJobCard({
     const isTrue = window.confirm("Are you sure you want to remove this row?");
     if (!isTrue) return;
     const copy = [...itemDelivery];
-    copy[itemIndex].stone.splice(stoneIndex, 1);
-    copy[itemIndex]["netwt"] =
+    copy[itemIndex].deduction.splice(stoneIndex, 1);
+    copy[itemIndex]["netWeight"] =
       copy[itemIndex]["ItemWeight"] - Number(totalDeduction(itemIndex, copy));
     setItemDelivery(copy);
   };
@@ -171,7 +166,6 @@ function AgrNewJobCard({
       setGivenGold(filtergold);
     }
   };
-  
 
   const totalGivenToGoldsmith = openingBalance + totalInputPurityGiven;
   const totalFinishedPurity = itemDelivery.reduce(
@@ -182,18 +176,22 @@ function AgrNewJobCard({
     (sum, row) => sum + parseFloat(row.purity || 0),
     0
   );
-  
-  const handleSave=()=>{
-     if(edit){
 
-     }else{
-         handleSaveJobCard(totalInputPurityGiven,jobCardBalance,openingBalance)
-     }
-    
-    
-  }
+  const handleSave = () => {
+    if (edit) {
+      handleUpdateJobCard(
+        totalInputPurityGiven,
+        totalFinishedPurity,
+        totalReceivedPurity,
+        jobCardBalance,
+        openingBalance
+      );
+    } else {
+      handleSaveJobCard(totalInputPurityGiven, jobCardBalance, openingBalance);
+    }
+  };
 
- useEffect(() => {
+  useEffect(() => {
     const updateTime = () => {
       const now = new Date();
 
@@ -210,24 +208,23 @@ function AgrNewJobCard({
     const timer = setInterval(updateTime, 60000);
     return () => clearInterval(timer);
   }, []);
-const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
- useEffect(() => {
-     const balance =
-       safeParse(openingBalance) >= 0
-         ? safeParse(totalInputPurityGiven) + safeParse(openingBalance)
-         : safeParse(openingBalance) + safeParse(totalInputPurityGiven);// we need to add openbalance and givenGold
-   
-     let difference =balance - safeParse(totalFinishedPurity); // total item delivery
- 
-     if (receivedMetalReturns.length >= 1) {
-       const totalReceived = totalReceivedPurity
- 
-       difference -= totalReceived;
-     }
- 
-     setJobCardBalance(format(difference));
+  const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
+  useEffect(() => {
+    const balance =
+      safeParse(openingBalance) >= 0
+        ? safeParse(totalInputPurityGiven) + safeParse(openingBalance)
+        : safeParse(openingBalance) + safeParse(totalInputPurityGiven); // we need to add openbalance and givenGold
 
-   }, [givenGold,itemDelivery,receivedMetalReturns]);
+    let difference = balance - safeParse(totalFinishedPurity); // total item delivery
+
+    if (receivedMetalReturns.length >= 1) {
+      const totalReceived = totalReceivedPurity;
+
+      difference -= totalReceived;
+    }
+
+    setJobCardBalance(format(difference));
+  }, [givenGold, itemDelivery, receivedMetalReturns]);
   return (
     <>
       <DialogTitle className="dialogTitle" id="customized-dialog-title">
@@ -248,7 +245,7 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
 
       <DialogContent dividers>
         <Box className="jobCardheader">
-          <Typography>ID:{edit?1:jobCardLength}</Typography>
+          <Typography>ID:{edit ? jobCardId : jobCardLength}</Typography>
           <Typography>Name:{name}</Typography>
           <Typography>Date:{today}</Typography>
           <Typography>Time:{time}</Typography>
@@ -272,9 +269,8 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
           <h4 className="section-title">Given Details</h4>
           <div className="givenGold">
             {givenGold.map((row, i) => (
-             
               <div key={row.id || `gold-${i}`} className="row">
-                 <strong>{i+1})</strong>
+                <strong>{i + 1})</strong>
                 <input
                   type="number"
                   placeholder="Weight"
@@ -342,7 +338,9 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
           <h3 className="section-title">Balance</h3>
           <div className="balance-block">
             <div className="balance-display-row">
-              <span className="balance-label">{openingBalance>0?"Opening Balance":"ExceesBalance"}</span>
+              <span className="balance-label">
+                {openingBalance >= 0 ? "Opening Balance" : "ExceesBalance"}
+              </span>
               <span className="balance-value">{format(openingBalance)}</span>
             </div>
             <div className="balance-display-row">
@@ -361,7 +359,7 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
           </div>
         </Box>
         {/* Item Delivery Section */}
-        <Box className="section">
+        <Box className="section" style={{ opacity: edit ? 1 : 0.5 }}>
           <h4 className="section-title">Item Delivery</h4>
           <TableContainer component={Paper} className="jobCardContainer">
             <Table
@@ -422,21 +420,21 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                   <React.Fragment key={index}>
                     <TableRow>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
                         {index + 1}
                       </TableCell>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
                         <select
-                          value={item.ItemName}
+                          value={item?.itemName}
                           onChange={(e) =>
                             handleChangeDeliver(
                               e.target.value,
-                              "ItemName",
+                              "itemName",
                               index
                             )
                           }
@@ -444,24 +442,24 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                           // disabled={isLoading || !isItemDeliveryEnabled}
                         >
                           {masterItems.map((option) => (
-                            <option key={option.id} value={option.itemName}>
-                              {option.itemName}
+                            <option key={option.id} value={option?.itemName}>
+                              {option?.itemName}
                             </option>
                           ))}
                         </select>
                       </TableCell>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
                         <input
-                          value={item.ItemWeight}
+                          value={item?.itemWeight ?? ""}
                           className="input itemInput"
                           type="number"
                           onChange={(e) =>
                             handleChangeDeliver(
                               e.target.value,
-                              "ItemWeight",
+                              "itemWeight",
                               index
                             )
                           }
@@ -469,13 +467,13 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                         />
                       </TableCell>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
                         <select
-                          value={item.Touch}
+                          value={item?.touch}
                           onChange={(e) =>
-                            handleChangeDeliver(e.target.value, "Touch", index)
+                            handleChangeDeliver(e.target.value, "touch", index)
                           }
                           className="select-small"
                           // disabled={isLoading || !isItemDeliveryEnabled}
@@ -488,19 +486,26 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                         </select>
                       </TableCell>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
-                        <Button onClick={() => handleStone(index)}>+</Button>
+                        <Button
+                          disabled={edit ? false : true}
+                          onClick={() => handlededuction(index)}
+                        >
+                          +
+                        </Button>
                       </TableCell>
 
-                      {/* First stone row */}
-                      {item.stone.length >= 1 ? (
+                      {/* First deduction row */}
+                      {item.deduction.length >= 1 ? (
                         <>
                           <TableCell className="tableCell">
                             <select
                               value={
-                                item.stone.length >= 1 ? item.stone[0].type : ""
+                                item?.deduction.length >= 1
+                                  ? item?.deduction[0].type
+                                  : ""
                               }
                               onChange={(e) =>
                                 handleDeductionChange(
@@ -523,8 +528,8 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                           <TableCell className="tableCell">
                             <input
                               value={
-                                item.stone.length >= 1
-                                  ? item.stone[0].weight
+                                item?.deduction.length >= 1
+                                  ? item.deduction[0].weight
                                   : ""
                               }
                               className="input"
@@ -541,11 +546,14 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                             />
                           </TableCell>
                           <TableCell className="tableCell">
-                            <MdDeleteForever
-                              className="delIcon"
-                              size={25}
+                            <button
+                              type="button"
+                              disabled={!edit}
                               onClick={() => handleRemoveDeduction(index, 0)}
-                            />
+                              className="icon-button"
+                            >
+                              <MdDeleteForever size={25} className="delIcon" />
+                            </button>
                           </TableCell>
                         </>
                       ) : (
@@ -555,22 +563,22 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                       )}
 
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
                         <input
-                          value={item.netwt}
+                          value={item?.netWeight ?? ""}
                           className="input itemInput"
                           readOnly
                           onWheel={(e) => e.target.blur()}
                         />
                       </TableCell>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
                         <select
-                          value={item.wastageType}
+                          value={item?.wastageType}
                           onChange={(e) =>
                             handleChangeDeliver(
                               e.target.value,
@@ -589,11 +597,11 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                         </select>
                       </TableCell>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
                         <input
-                          value={item.wastageValue}
+                          value={item?.wastageValue ?? ""}
                           className="input itemInput"
                           type="number"
                           onChange={(e) =>
@@ -607,11 +615,11 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                         />
                       </TableCell>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
                         <input
-                          value={item.finalPurity}
+                          value={item.finalPurity ?? ""}
                           className="input itemInput"
                           readOnly
                           onChange={(e) =>
@@ -625,19 +633,21 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                         />
                       </TableCell>
                       <TableCell
-                        rowSpan={item.stone.length || 1}
+                        rowSpan={item?.deduction.length || 1}
                         className="tableCell"
                       >
-                        <MdDeleteForever
-                          className="delIcon"
-                          size={25}
+                        <button
+                          disabled={!edit}
                           onClick={() => handleRemovedelivery(index)}
-                        />
+                          className="icon-button"
+                        >
+                          <MdDeleteForever size={25} className="delIcon" />
+                        </button>
                       </TableCell>
                     </TableRow>
 
                     {/* Remaining stone rows */}
-                    {item.stone.map(
+                    {item.deduction.map(
                       (s, i) =>
                         i !== 0 && (
                           <TableRow key={i}>
@@ -664,7 +674,7 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                             </TableCell>
                             <TableCell className="tableCell">
                               <input
-                                value={s.weight}
+                                value={s.weight ?? ""}
                                 className="input"
                                 type="number"
                                 onChange={(e) =>
@@ -694,15 +704,16 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
             </Table>
           </TableContainer>
           <button
+            disabled={!edit}
             onClick={() =>
               setItemDelivery([
                 ...itemDelivery,
                 {
-                  ItemName: "",
-                  ItemWeight: "",
-                  Touch: "",
-                  stone: [{ dedcution: "", weight: "" }],
-                  netwt: "",
+                  itemName: "",
+                  itemWeight: "",
+                  touch: "",
+                  deduction: [{ type: "", weight: "" }],
+                  netWeight: "",
                   wastageTyp: "",
                   wastageValue: "",
                   finalPurity: "",
@@ -723,15 +734,9 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
           </div>
         </Box>
         {/* Received Section */}
-        <Box
-          className="section" // style={{
-          //   opacity: isReceivedSectionEnabled ? 1 : 0.5,
-          //   pointerEvents: isReceivedSectionEnabled ? "auto" : "none",
-          // }}
-        >
+        <Box className="section" style={{ opacity: edit ? 1 : 0.5 }}>
           <h3 className="section-title">Received Section</h3>
           <div className="received-section-container">
-            
             {receivedMetalReturns.map((row, i) => (
               <div
                 key={row.id || `received-${i}`}
@@ -768,14 +773,18 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
                   value={format(row.purity)}
                   className="input-read-only input-small"
                 />
-                <MdDeleteForever
-                  className="delIcon"
-                  size={25}
+                <button
+                  type="button"
+                  disabled={!edit}
                   onClick={() => handleRemoveReceive(i)}
-                />
+                  className="icon-button"
+                >
+                  <MdDeleteForever size={25} className="delIcon" />
+                </button>
               </div>
             ))}
             <button
+              disabled={!edit}
               onClick={() =>
                 setReceivedMetalReturns([
                   ...receivedMetalReturns,
@@ -797,29 +806,26 @@ const safeParse = (val) => (isNaN(parseFloat(val)) ? 0 : parseFloat(val));
             </div>
           </div>
         </Box>
-         <Box className="section" style={{textAlign:"center"}}>
-           { jobCardBalance<0? (
-                  <p className="balance-text-owner">
-                    Owner should give balance:
-                    <span className="balance-amount">
-                      {format(jobCardBalance)}
-                    </span>
-                  </p>
-                ) :jobCardBalance>0? (
-                  <p className="balance-text-goldsmith ">
-                    Goldsmith should give balance:
-                    <span className="balance-amount">
-                      {format(jobCardBalance)}
-                    </span>
-                  </p>
-                ) :(<p className="balanceNill">balance Nill:
-                    <span className="balance-amount">
-                      {format(jobCardBalance)}
-                    </span> </p>)
-                   
-                }
-                 
-         </Box>
+        <Box className="section" style={{ textAlign: "center" }}>
+          {jobCardBalance < 0 ? (
+            <p className="balance-text-owner">
+              Owner should give balance:
+              <span className="balance-amount">{format(jobCardBalance)}</span>
+            </p>
+          ) : jobCardBalance > 0 ? (
+            <p className="balance-text-goldsmith ">
+              Goldsmith should give balance:
+              <span className="balance-amount">{format(jobCardBalance)}</span>
+            </p>
+          ) : (
+            <p className="balanceNill">
+              balance Nill:
+              <span className="balance-amount">
+                {format(jobCardBalance)}
+              </span>{" "}
+            </p>
+          )}
+        </Box>
       </DialogContent>
       <DialogActions className="actionButton">
         <Button autoFocus onClick={handleSave}>
