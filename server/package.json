@@ -4,6 +4,7 @@
   "main": "index.js",
  "scripts": {
   "start": "node Server.js",
+  "dev": "nodemon Server.js",
   "build": "npm rebuild bcrypt --build-from-source"
 },
   "keywords": [],
