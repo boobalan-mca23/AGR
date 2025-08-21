@@ -147,6 +147,7 @@ const handleFilterJobCard=(id,index)=>{
       handleCloseJobcard();
       setGivenGold([{ weight: "", touch: "", purity: "" }])
       setDescription("")
+      setJobCards(response.data.allJobCards)
       toast.success(response.data.message);
     } catch (err) {
       toast.error(err.message);
@@ -187,6 +188,16 @@ const handleFilterJobCard=(id,index)=>{
       handleCloseJobcard();
       setGivenGold([{ weight: "", touch: "", purity: "" }])
       setDescription("")
+      setItemDelivery([{ itemName: "",
+      ItemWeight: "",
+      Touch: "",
+      deduction: [{ type: "", weight: "" }], 
+      netwt: "",
+      wastageType: "",
+      wastageValue: "",
+      finalPurity: ""}])
+      setReceivedMetalReturns([{ weight: "", touch: "", purity: "" }])
+      setJobCards(response.data.allJobCards)
       toast.success(response.data.message);
     } catch (err) {
       toast.error(err.message);
