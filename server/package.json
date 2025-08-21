@@ -2,11 +2,10 @@
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node Server.js",
-    "dev": "nodemon Server.js"
-  },
+ "scripts": {
+  "start": "node Server.js",
+  "build": "npm rebuild bcrypt --build-from-source"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
